@@ -1,58 +1,81 @@
 import { NextResponse } from "next/server";
+import { connectDb } from "@/helper/db";
+import { User } from "@/models/users";
 
-export function GET(request) {
+connectDb();
+export async function GET(request) {
+  var users = [];
+  try {
+    users = await User.find();
+    
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message: "Failed to fetch users",
+      },
+      { status: 500 }
+    );
+    
+  }
+  return NextResponse.json(users);
+}
 
-    const users = [{
-        name    : "John Doe",
-        age     : 30,
-        address : "123 Main St",
-        city    : "New York",
-        state   : "NY",
-        zip     : "10001"
+export async function POST(request) {
+  //fetch user details from request
+  const { name, email, password } = await request.json();
+  const user = new User({
+    name,
+    email,
+    password,
+  });
+
+  //create  user model with user model
+  try {
+    // Save the object in DB
+    const createdUser = await user.save();
+    return NextResponse.json(createdUser, {
+      status: 201,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message: "Failed to create user",
+      },
+      { status: 500 }
+    );
+  }
+  
+}
+
+export async function DELETE(request, { params }) {
+    const { userid } = params;
+  
+    try {
+      await User.deleteOne({ _id: userid }); // Use `id`, not `user_id`
+      return NextResponse.json(
+        {
+          message: "User deleted successfully",
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      return NextResponse.json(
+        {
+          message: "Failed to delete user",
+        },
+        { status: 500 }
+      );
+    }
+  }
+  
+
+
+export function PUT(request) {
+  return new Response(JSON.stringify({ name: "John Doe" }), {
+    status: 200,
+    statusText: "User updated successfully",
+    headers: {
+      "Content-Type": "application/json",
     },
-    {
-        name    : "Jane Doe",
-        age     : 25,
-        address : "456 Main St",
-        city    : "Los Angeles",
-        state   : "CA",
-        zip     : "90001"
-    },
-    {
-        name    : "Bob Smith",
-        age     : 35,
-        address : "789 Main St",
-        city    : "Chicago",
-        state   : "IL",
-        zip     : "60601"
-    }];
-    return NextResponse.json(users);
-}
-
-export function POST(request) {
-    return new Response(JSON.stringify({ name: "John Doe" }), {
-        status: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
-}
-
-export function DELETE(request) {
-    return new Response(JSON.stringify({ name: "John Doe" }), {
-        status: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        message: "User deleted successfully",
-    });
-}
-
-export  function PUT(request) {
-    return new Response(JSON.stringify({ name: "John Doe" }), {
-        status: 200,  statusText : "User updated successfully",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
+  });
 }
