@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/helper/db";
 import { User } from "@/models/users";
+import bcryptjs from "bcryptjs";
+
 
 connectDb();
 export async function GET(request) {
   var users = [];
   try {
-    users = await User.find();
+    users = await User.find({} , { password: 0 }); // Exclude password field
     
   } catch (error) {
     return NextResponse.json(
@@ -21,7 +23,6 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  //fetch user details from request
   const { name, email, password } = await request.json();
   const user = new User({
     name,
@@ -29,23 +30,24 @@ export async function POST(request) {
     password,
   });
 
-  //create  user model with user model
   try {
-    // Save the object in DB
+    user.password = await bcryptjs.hash(user.password, parseInt(process.env.BCRYPT_SALT));
+
     const createdUser = await user.save();
-    return NextResponse.json(createdUser, {
-      status: 201,
-    });
+
+    // Convert to plain object and remove the password
+    const userResponse = createdUser.toObject();
+    delete userResponse.password;
+
+    return NextResponse.json(userResponse, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      {
-        message: "Failed to create user",
-      },
+      { message: "Failed to create user" },
       { status: 500 }
     );
   }
-  
 }
+
 
 export async function DELETE(request, { params }) {
     const { userid } = params;
