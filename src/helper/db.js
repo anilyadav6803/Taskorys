@@ -8,13 +8,7 @@ export const connectDb = async () => {
     });
     console.log("✅ Database connected " );
 
-    // test csae 
-  //const uuser = await new User({
-    //name: "John Doe",
-    //email: "RkTtL@example.com",
-   // password: "password123",
- // }).save();
-
+  
     console.log("✅ User created: ", uuser);
 
   } catch (error) {
